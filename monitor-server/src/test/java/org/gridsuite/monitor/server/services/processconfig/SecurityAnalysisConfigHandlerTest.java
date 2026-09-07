@@ -6,16 +6,14 @@
  */
 package org.gridsuite.monitor.server.services.processconfig;
 
-import org.gridsuite.monitor.commons.types.processconfig.ModificationInfo;
 import org.gridsuite.monitor.commons.types.processconfig.SecurityAnalysisConfig;
 import org.gridsuite.monitor.commons.types.processexecution.ProcessType;
 import org.gridsuite.monitor.server.entities.processconfig.SecurityAnalysisConfigEntity;
 import org.gridsuite.monitor.server.mappers.processconfig.SecurityAnalysisConfigMapper;
+import org.gridsuite.monitor.server.repositories.processconfig.SecurityAnalysisConfigRepository;
+import org.gridsuite.monitor.server.services.processconfig.handlers.SecurityAnalysisConfigHandler;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 
@@ -23,7 +21,12 @@ import static org.mockito.Mockito.*;
  * @author Caroline Jeandat {@literal <caroline.jeandat at rte-france.com>}
  */
 @ExtendWith(MockitoExtension.class)
-class SecurityAnalysisConfigHandlerTest extends AbstractProcessConfigHandlerTest<SecurityAnalysisConfig, SecurityAnalysisConfigEntity, SecurityAnalysisConfigMapper, SecurityAnalysisConfigHandler> {
+class SecurityAnalysisConfigHandlerTest extends AbstractProcessConfigHandlerTest<
+    SecurityAnalysisConfig,
+    SecurityAnalysisConfigEntity,
+    SecurityAnalysisConfigMapper,
+    SecurityAnalysisConfigRepository,
+    SecurityAnalysisConfigHandler> {
 
     @Override
     ProcessType getExpectedProcessType() {
@@ -36,18 +39,22 @@ class SecurityAnalysisConfigHandlerTest extends AbstractProcessConfigHandlerTest
     }
 
     @Override
-    SecurityAnalysisConfigHandler createHandler(SecurityAnalysisConfigMapper mapper) {
-        return new SecurityAnalysisConfigHandler(mapper);
+    SecurityAnalysisConfigRepository createRepository() {
+        return mock(SecurityAnalysisConfigRepository.class);
+    }
+
+    @Override
+    SecurityAnalysisConfigHandler createHandler(SecurityAnalysisConfigMapper mapper, SecurityAnalysisConfigRepository repository) {
+        return new SecurityAnalysisConfigHandler(mapper, repository);
     }
 
     @Override
     SecurityAnalysisConfig createProcessConfig() {
-        return new SecurityAnalysisConfig(UUID.randomUUID(), List.of(new ModificationInfo(UUID.randomUUID(), "descr", true)),
-            UUID.randomUUID());
+        return mock(SecurityAnalysisConfig.class);
     }
 
     @Override
     SecurityAnalysisConfigEntity createProcessConfigEntity() {
-        return new SecurityAnalysisConfigEntity();
+        return mock(SecurityAnalysisConfigEntity.class);
     }
 }

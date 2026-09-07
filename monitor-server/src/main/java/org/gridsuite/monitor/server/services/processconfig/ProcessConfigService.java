@@ -12,9 +12,10 @@ import org.gridsuite.monitor.commons.types.processexecution.ProcessType;
 import org.gridsuite.monitor.server.dto.processconfig.MetadataInfos;
 import org.gridsuite.monitor.server.dto.processconfig.PersistedProcessConfig;
 import org.gridsuite.monitor.server.dto.processconfig.ProcessConfigComparison;
-import org.gridsuite.monitor.server.entities.processconfig.ProcessConfigEntity;
+import org.gridsuite.monitor.server.entities.processconfig.AbstractProcessConfigEntity;
 import org.gridsuite.monitor.server.error.MonitorServerException;
-import org.gridsuite.monitor.server.repositories.ProcessConfigRepository;
+import org.gridsuite.monitor.server.repositories.processconfig.ProcessConfigRepository;
+import org.gridsuite.monitor.server.services.processconfig.handlers.ProcessConfigHandler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,7 +44,7 @@ public class ProcessConfigService {
     }
 
     @SuppressWarnings("unchecked")
-    private <C extends ProcessConfig, E extends ProcessConfigEntity> ProcessConfigHandler<C, E> getHandler(ProcessType processType) {
+    private <C extends ProcessConfig, E extends AbstractProcessConfigEntity> ProcessConfigHandler<C, E> getHandler(ProcessType processType) {
         ProcessConfigHandler<?, ?> handler = processConfigHandlers.get(processType);
         if (handler == null) {
             throw new IllegalArgumentException("Unsupported process config type: " + processType);
@@ -53,7 +54,7 @@ public class ProcessConfigService {
 
     @Transactional
     public UUID createProcessConfig(ProcessConfig processConfig) {
-        ProcessConfigEntity entity = getHandler(processConfig.processType()).toEntity(processConfig);
+        AbstractProcessConfigEntity entity = getHandler(processConfig.processType()).toEntity(processConfig);
         return processConfigRepository.save(entity).getId();
     }
 
@@ -65,7 +66,7 @@ public class ProcessConfigService {
 
     @Transactional(readOnly = true)
     public List<PersistedProcessConfig> getProcessConfigs(ProcessType processType) {
-        return processConfigRepository.findAllByProcessType(processType).stream()
+        return getHandler(processType).findAll().stream()
             .map(this::toPersistedProcessConfig)
             .toList();
     }
@@ -93,7 +94,7 @@ public class ProcessConfigService {
     public Optional<UUID> duplicateProcessConfig(UUID sourceProcessConfigUuid) {
         return processConfigRepository.findById(sourceProcessConfigUuid)
             .map(sourceEntity -> {
-                ProcessConfigEntity entity = getHandler(sourceEntity.getProcessType()).copyEntity(sourceEntity);
+                AbstractProcessConfigEntity entity = getHandler(sourceEntity.getProcessType()).copyEntity(sourceEntity);
                 return processConfigRepository.save(entity).getId();
             });
     }
@@ -108,18 +109,18 @@ public class ProcessConfigService {
         }
     }
 
-    private PersistedProcessConfig toPersistedProcessConfig(ProcessConfigEntity entity) {
+    private PersistedProcessConfig toPersistedProcessConfig(AbstractProcessConfigEntity entity) {
         return new PersistedProcessConfig(entity.getId(), toProcessConfig(entity));
     }
 
-    private ProcessConfig toProcessConfig(ProcessConfigEntity entity) {
+    private ProcessConfig toProcessConfig(AbstractProcessConfigEntity entity) {
         return getHandler(entity.getProcessType()).toDto(entity);
     }
 
     @Transactional(readOnly = true)
     public Optional<ProcessConfigComparison> compareProcessConfigs(UUID uuid1, UUID uuid2) {
-        Optional<ProcessConfigEntity> processConfigEntity1 = processConfigRepository.findById(uuid1);
-        Optional<ProcessConfigEntity> processConfigEntity2 = processConfigRepository.findById(uuid2);
+        Optional<AbstractProcessConfigEntity> processConfigEntity1 = processConfigRepository.findById(uuid1);
+        Optional<AbstractProcessConfigEntity> processConfigEntity2 = processConfigRepository.findById(uuid2);
 
         if (processConfigEntity1.isEmpty() || processConfigEntity2.isEmpty()) {
             return Optional.empty();

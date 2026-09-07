@@ -28,51 +28,32 @@ public class StepExecutionService implements StepExecutor {
     private final ReportRestClient reportRestClient;
 
     @Override
-    public <C extends ProcessConfig> void skipStep(ProcessStepExecutionContext<C> context, ProcessStep<C> step) {
-        ProcessExecutionStep executionStep = ProcessExecutionStep.builder()
-                .id(context.getStepExecutionId())
-                .stepType(step.getType().getName())
-                .stepOrder(context.getStepOrder())
-                .status(StepStatus.SKIPPED)
-                .startedAt(context.getStartedAt())
-                .completedAt(Instant.now())
-                .build();
-        notificationService.updateStepStatus(context.getProcessExecutionId(), executionStep);
-    }
-
-    @Override
     public <C extends ProcessConfig> void executeStep(ProcessStepExecutionContext<C> context, ProcessStep<C> step) {
-        ProcessExecutionStep executionStep = ProcessExecutionStep.builder()
-                .id(context.getStepExecutionId())
-                .stepType(step.getType().getName())
-                .stepOrder(context.getStepOrder())
-                .status(StepStatus.RUNNING)
-                .startedAt(context.getStartedAt())
-                .build();
-        notificationService.updateStepStatus(context.getProcessExecutionId(), executionStep);
+        updateStepStatus(context, StepStatus.RUNNING);
 
         try {
             step.execute(context);
-            updateStepStatus(context, StepStatus.COMPLETED, step);
+            updateStepStatus(context, StepStatus.COMPLETED);
         } catch (Exception e) {
-            updateStepStatus(context, StepStatus.FAILED, step);
+            updateStepStatus(context, StepStatus.FAILED);
             throw e;
         } finally {
             reportRestClient.sendReport(context.getProcessReportId(), context.getReportNode());
         }
     }
 
-    private void updateStepStatus(ProcessStepExecutionContext<?> context, StepStatus status, ProcessStep<?> step) {
-        ProcessExecutionStep updated = ProcessExecutionStep.builder()
+    private <C extends ProcessConfig> void updateStepStatus(ProcessStepExecutionContext<C> context, StepStatus status) {
+        ProcessExecutionStep updatedStep = ProcessExecutionStep.builder()
                 .id(context.getStepExecutionId())
-                .stepType(step.getType().getName())
+                .stepType(context.getProcessStepType().getName())
                 .stepOrder(context.getStepOrder())
                 .status(status)
                 .resultId(context.getResultInfos() != null ? context.getResultInfos().resultUUID() : null)
                 .resultType(context.getResultInfos() != null ? context.getResultInfos().resultType() : null)
                 .startedAt(context.getStartedAt())
-                .completedAt(Instant.now())
+                .completedAt(status == StepStatus.COMPLETED || status == StepStatus.FAILED ? Instant.now() : null)
                 .build();
-        notificationService.updateStepStatus(context.getProcessExecutionId(), updated);
+
+        notificationService.updateStepStatus(context.getProcessExecutionId(), updatedStep);
     }
 }

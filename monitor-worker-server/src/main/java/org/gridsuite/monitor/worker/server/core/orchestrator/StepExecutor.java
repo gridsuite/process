@@ -18,15 +18,6 @@ import org.gridsuite.monitor.worker.server.core.process.ProcessStep;
 public interface StepExecutor {
 
     /**
-     * Mark a step as skipped and publish the corresponding update.
-     *
-     * @param context step execution context
-     * @param step step definition being skipped
-     * @param <C> concrete {@link ProcessConfig} type associated with the parent process
-     */
-    <C extends ProcessConfig> void skipStep(ProcessStepExecutionContext<C> context, ProcessStep<C> step);
-
-    /**
      * Execute a step and publish step status updates around the execution.
      *
      * @param context step execution context

@@ -7,12 +7,12 @@
 package org.gridsuite.monitor.server.mappers.processconfig;
 
 import org.gridsuite.monitor.commons.types.processconfig.ProcessConfig;
-import org.gridsuite.monitor.server.entities.processconfig.ProcessConfigEntity;
+import org.gridsuite.monitor.server.entities.processconfig.AbstractProcessConfigEntity;
 
 /**
  * @author Caroline Jeandat {@literal <caroline.jeandat at rte-france.com>}
  */
-public interface ProcessConfigMapper<C extends ProcessConfig, E extends ProcessConfigEntity> {
+public interface ProcessConfigMapper<C extends ProcessConfig, E extends AbstractProcessConfigEntity> {
     E toEntity(C dto);
 
     C toDto(E entity);

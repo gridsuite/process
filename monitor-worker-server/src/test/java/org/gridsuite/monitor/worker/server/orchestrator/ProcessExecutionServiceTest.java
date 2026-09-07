@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -37,6 +38,9 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 class ProcessExecutionServiceTest {
+    @Mock
+    private StepExecutor stepExecutor;
+
     @Mock
     private NotificationService notificationService;
 
@@ -56,7 +60,6 @@ class ProcessExecutionServiceTest {
     @BeforeEach
     void setUp() {
         when(process.getProcessType()).thenReturn(ProcessType.SECURITY_ANALYSIS);
-        StepExecutor stepExecutor = new StepExecutionService(notificationService, reportRestClient);
         processExecutionService = new ProcessExecutionService(List.of(process), stepExecutor, notificationService, reportRestClient, EXECUTION_ENV_NAME);
     }
 
@@ -82,40 +85,44 @@ class ProcessExecutionServiceTest {
         ProcessStep<ProcessConfig> step3 = mockStep(step3Id, "STEP_3");
         when(processConfig.processType()).thenReturn(ProcessType.SECURITY_ANALYSIS);
         when(process.getSteps()).thenReturn(List.of(step1, step2, step3));
+        doNothing().when(stepExecutor).executeStep(any(), any());
         ProcessRunMessage<ProcessConfig> runMessage = new ProcessRunMessage<>(executionId, caseUuid, processConfig, reportId, null);
 
         processExecutionService.executeProcess(runMessage);
 
-        verify(reportRestClient, times(4)).sendReport(any(UUID.class), any(ReportNode.class));
-        verify(notificationService).updateStepsStatuses(eq(executionId), argThat(steps ->
-            steps.size() == 3 &&
-            steps.get(0).getStatus() == StepStatus.SCHEDULED &&
-            steps.get(0).getId().equals(step1Id) &&
-            steps.get(0).getStepType().equals("STEP_1") &&
-            steps.get(0).getStepOrder() == 0 &&
-            steps.get(1).getStatus() == StepStatus.SCHEDULED &&
-            steps.get(1).getId().equals(step2Id) &&
-            steps.get(1).getStepType().equals("STEP_2") &&
-            steps.get(1).getStepOrder() == 1 &&
-            steps.get(2).getStatus() == StepStatus.SCHEDULED &&
-            steps.get(2).getId().equals(step3Id) &&
-            steps.get(2).getStepType().equals("STEP_3") &&
-            steps.get(2).getStepOrder() == 2
-        ));
-        verify(step1).execute(any());
-        verify(step2).execute(any());
-        verify(step3).execute(any());
+        verify(reportRestClient, times(1)).sendReport(any(UUID.class), any(ReportNode.class));
+        verify(stepExecutor).executeStep(any(), eq(step1));
+        verify(stepExecutor).executeStep(any(), eq(step2));
+        verify(stepExecutor).executeStep(any(), eq(step3));
+
         InOrder inOrder = inOrder(notificationService);
         inOrder.verify(notificationService).updateExecutionStatus(eq(executionId), argThat(update ->
             update.getStatus() == ProcessStatus.RUNNING &&
             update.getExecutionEnvName().equals(EXECUTION_ENV_NAME) &&
             update.getCompletedAt() == null
         ));
+        inOrder.verify(notificationService).updateStepsStatuses(eq(executionId), argThat(steps ->
+                steps.size() == 3 &&
+                        steps.get(0).getStatus() == StepStatus.SCHEDULED &&
+                        steps.get(0).getId().equals(step1Id) &&
+                        steps.get(0).getStepType().equals("STEP_1") &&
+                        steps.get(0).getStepOrder() == 0 &&
+                        steps.get(1).getStatus() == StepStatus.SCHEDULED &&
+                        steps.get(1).getId().equals(step2Id) &&
+                        steps.get(1).getStepType().equals("STEP_2") &&
+                        steps.get(1).getStepOrder() == 1 &&
+                        steps.get(2).getStatus() == StepStatus.SCHEDULED &&
+                        steps.get(2).getId().equals(step3Id) &&
+                        steps.get(2).getStepType().equals("STEP_3") &&
+                        steps.get(2).getStepOrder() == 2
+        ));
         inOrder.verify(notificationService).updateExecutionStatus(eq(executionId), argThat(update ->
             update.getStatus() == ProcessStatus.COMPLETED &&
             update.getExecutionEnvName().equals(EXECUTION_ENV_NAME) &&
             update.getCompletedAt() != null
         ));
+
+        verifyNoMoreInteractions(notificationService);
     }
 
     @Test
@@ -123,29 +130,62 @@ class ProcessExecutionServiceTest {
         UUID executionId = UUID.randomUUID();
         UUID caseUuid = UUID.randomUUID();
         UUID reportId = UUID.randomUUID();
-        ProcessStep<ProcessConfig> step1 = mockStep(UUID.randomUUID(), "STEP_1");
-        ProcessStep<ProcessConfig> step2 = mockStep(UUID.randomUUID(), "STEP_2");
-        ProcessStep<ProcessConfig> step3 = mockStep(UUID.randomUUID(), "STEP_3");
+        UUID step1Id = UUID.randomUUID();
+        UUID step2Id = UUID.randomUUID();
+        UUID step3Id = UUID.randomUUID();
+        ProcessStep<ProcessConfig> step1 = mockStep(step1Id, "STEP_1");
+        ProcessStep<ProcessConfig> step2 = mockStep(step2Id, "STEP_2");
+        ProcessStep<ProcessConfig> step3 = mockStep(step3Id, "STEP_3");
         RuntimeException stepException = new RuntimeException("Step execution failed");
-        doThrow(stepException).when(step1).execute(any());
+        doThrow(stepException).when(stepExecutor).executeStep(any(), eq(step1));
         when(processConfig.processType()).thenReturn(ProcessType.SECURITY_ANALYSIS);
         when(process.getSteps()).thenReturn(List.of(step1, step2, step3));
         ProcessRunMessage<ProcessConfig> runMessage = new ProcessRunMessage<>(executionId, caseUuid, processConfig, reportId, null);
 
-        processExecutionService.executeProcess(runMessage);
+        assertThrows(RuntimeException.class,
+                () -> processExecutionService.executeProcess(runMessage));
 
-        verify(reportRestClient, times(2)).sendReport(any(UUID.class), any(ReportNode.class));
-        verify(step1).execute(any());
-        verify(step2, never()).execute(any());
-        verify(step3, never()).execute(any());
+        verify(reportRestClient, times(1)).sendReport(any(UUID.class), any(ReportNode.class));
+        verify(stepExecutor).executeStep(any(), eq(step1));
+        verify(stepExecutor, never()).executeStep(any(), eq(step2));
+        verify(stepExecutor, never()).executeStep(any(), eq(step3));
+
         InOrder inOrder = inOrder(notificationService);
         inOrder.verify(notificationService).updateExecutionStatus(eq(executionId), argThat(update ->
             update.getStatus() == ProcessStatus.RUNNING
+        ));
+        inOrder.verify(notificationService).updateStepsStatuses(eq(executionId), argThat(steps ->
+                steps.size() == 3 &&
+                        steps.get(0).getStatus() == StepStatus.SCHEDULED &&
+                        steps.get(0).getId().equals(step1Id) &&
+                        steps.get(0).getStepType().equals("STEP_1") &&
+                        steps.get(0).getStepOrder() == 0 &&
+                        steps.get(1).getStatus() == StepStatus.SCHEDULED &&
+                        steps.get(1).getId().equals(step2Id) &&
+                        steps.get(1).getStepType().equals("STEP_2") &&
+                        steps.get(1).getStepOrder() == 1 &&
+                        steps.get(2).getStatus() == StepStatus.SCHEDULED &&
+                        steps.get(2).getId().equals(step3Id) &&
+                        steps.get(2).getStepType().equals("STEP_3") &&
+                        steps.get(2).getStepOrder() == 2
+        ));
+        inOrder.verify(notificationService).updateStepsStatuses(eq(executionId), argThat(steps ->
+                steps.size() == 2 &&
+                        steps.get(0).getStatus() == StepStatus.SKIPPED &&
+                        steps.get(0).getId().equals(step2Id) &&
+                        steps.get(0).getStepType().equals("STEP_2") &&
+                        steps.get(0).getStepOrder() == 1 &&
+                        steps.get(1).getStatus() == StepStatus.SKIPPED &&
+                        steps.get(1).getId().equals(step3Id) &&
+                        steps.get(1).getStepType().equals("STEP_3") &&
+                        steps.get(1).getStepOrder() == 2
         ));
         inOrder.verify(notificationService).updateExecutionStatus(eq(executionId), argThat(update ->
             update.getStatus() == ProcessStatus.FAILED &&
             update.getCompletedAt() != null
         ));
+
+        verifyNoMoreInteractions(notificationService);
     }
 
     @Test

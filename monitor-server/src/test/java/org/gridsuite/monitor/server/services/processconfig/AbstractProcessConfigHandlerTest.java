@@ -8,10 +8,15 @@ package org.gridsuite.monitor.server.services.processconfig;
 
 import org.gridsuite.monitor.commons.types.processconfig.ProcessConfig;
 import org.gridsuite.monitor.commons.types.processexecution.ProcessType;
-import org.gridsuite.monitor.server.entities.processconfig.ProcessConfigEntity;
+import org.gridsuite.monitor.server.entities.processconfig.AbstractProcessConfigEntity;
 import org.gridsuite.monitor.server.mappers.processconfig.ProcessConfigMapper;
+import org.gridsuite.monitor.server.services.processconfig.handlers.ProcessConfigHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,19 +27,22 @@ import static org.mockito.Mockito.*;
  */
 public abstract class AbstractProcessConfigHandlerTest<
     C extends ProcessConfig,
-    E extends ProcessConfigEntity,
+    E extends AbstractProcessConfigEntity,
     M extends ProcessConfigMapper<C, E>,
+    R extends JpaRepository<E, UUID>,
     H extends ProcessConfigHandler<C, E>> {
 
     protected M mapper;
-
+    protected R repository;
     protected H handler;
 
     abstract ProcessType getExpectedProcessType();
 
     abstract M createMapper();
 
-    abstract H createHandler(M mapper);
+    abstract R createRepository();
+
+    abstract H createHandler(M mapper, R repository);
 
     abstract C createProcessConfig();
 
@@ -43,7 +51,8 @@ public abstract class AbstractProcessConfigHandlerTest<
     @BeforeEach
     protected void setUp() {
         mapper = createMapper();
-        handler = createHandler(mapper);
+        repository = createRepository();
+        handler = createHandler(mapper, repository);
     }
 
     @Test
@@ -70,7 +79,7 @@ public abstract class AbstractProcessConfigHandlerTest<
         when(mapper.toDto(processConfigEntity1)).thenReturn(processConfig);
         when(mapper.toEntity(processConfig)).thenReturn(expectedProcessConfigEntity);
 
-        ProcessConfigEntity result = handler.copyEntity(processConfigEntity1);
+        AbstractProcessConfigEntity result = handler.copyEntity(processConfigEntity1);
 
         assertThat(result).isEqualTo(expectedProcessConfigEntity);
         verify(mapper).toDto(processConfigEntity1);
@@ -84,7 +93,7 @@ public abstract class AbstractProcessConfigHandlerTest<
 
         when(mapper.toEntity(processConfig)).thenReturn(expectedProcessConfigEntity);
 
-        ProcessConfigEntity result = handler.toEntity(processConfig);
+        AbstractProcessConfigEntity result = handler.toEntity(processConfig);
 
         assertThat(result).isEqualTo(expectedProcessConfigEntity);
         verify(mapper).toEntity(processConfig);
@@ -101,5 +110,18 @@ public abstract class AbstractProcessConfigHandlerTest<
 
         assertThat(result).isEqualTo(expectedProcessConfig);
         verify(mapper).toDto(processConfigEntity);
+    }
+
+    @Test
+    void findAllTest() {
+        E processConfigEntity1 = createProcessConfigEntity();
+        E processConfigEntity2 = createProcessConfigEntity();
+
+        when(repository.findAll()).thenReturn(List.of(processConfigEntity1, processConfigEntity2));
+
+        List<E> result = handler.findAll();
+
+        assertThat(result).isEqualTo(List.of(processConfigEntity1, processConfigEntity2));
+        verify(repository).findAll();
     }
 }

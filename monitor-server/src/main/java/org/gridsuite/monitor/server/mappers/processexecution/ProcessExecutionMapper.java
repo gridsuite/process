@@ -6,6 +6,7 @@
  */
 package org.gridsuite.monitor.server.mappers.processexecution;
 
+import org.gridsuite.monitor.server.config.MapStructConfig;
 import org.gridsuite.monitor.server.dto.processexecution.ProcessExecution;
 import org.gridsuite.monitor.server.entities.processexecution.ProcessExecutionEntity;
 import org.mapstruct.Mapper;
@@ -13,7 +14,7 @@ import org.mapstruct.Mapper;
 /**
  * @author Radouane Khouadri <radouane.khouadri at rte-france.com>
  */
-@Mapper(componentModel = "spring")
+@Mapper(config = MapStructConfig.class)
 public interface ProcessExecutionMapper {
     ProcessExecution toDto(ProcessExecutionEntity entity);
 }

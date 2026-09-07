@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gridsuite.monitor.commons.types.processexecution.ProcessType;
 
 import java.util.UUID;
 
@@ -19,13 +20,17 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "short_circuit_config")
-@DiscriminatorValue("SHORT_CIRCUIT")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "shortCircuitConfig_id_fk_constraint"))
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ShortCircuitConfigEntity extends ProcessConfigEntity {
+public class ShortCircuitConfigEntity extends AbstractProcessConfigEntity {
     @Column(name = "short_circuit_parameters_uuid")
     private UUID shortCircuitParametersUuid;
+
+    @Override
+    public ProcessType getProcessType() {
+        return ProcessType.SHORT_CIRCUIT;
+    }
 }

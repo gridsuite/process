@@ -7,6 +7,7 @@
 package org.gridsuite.monitor.server.mappers.processexecution;
 
 import org.gridsuite.monitor.commons.types.messaging.ProcessExecutionStep;
+import org.gridsuite.monitor.server.config.MapStructConfig;
 import org.gridsuite.monitor.server.entities.processexecution.ProcessExecutionStepEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -15,7 +16,7 @@ import org.mapstruct.MappingTarget;
 /**
  * @author Radouane Khouadri <radouane.khouadri at rte-france.com>
  */
-@Mapper(componentModel = "spring")
+@Mapper(config = MapStructConfig.class)
 public interface ProcessExecutionStepMapper {
 
     ProcessExecutionStep toDto(ProcessExecutionStepEntity entity);

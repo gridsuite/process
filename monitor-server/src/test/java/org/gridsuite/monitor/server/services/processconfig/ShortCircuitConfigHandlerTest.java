@@ -6,16 +6,14 @@
  */
 package org.gridsuite.monitor.server.services.processconfig;
 
-import org.gridsuite.monitor.commons.types.processconfig.ModificationInfo;
 import org.gridsuite.monitor.commons.types.processconfig.ShortCircuitConfig;
 import org.gridsuite.monitor.commons.types.processexecution.ProcessType;
 import org.gridsuite.monitor.server.entities.processconfig.ShortCircuitConfigEntity;
 import org.gridsuite.monitor.server.mappers.processconfig.ShortCircuitConfigMapper;
+import org.gridsuite.monitor.server.repositories.processconfig.ShortCircuitConfigRepository;
+import org.gridsuite.monitor.server.services.processconfig.handlers.ShortCircuitConfigHandler;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 
@@ -23,7 +21,12 @@ import static org.mockito.Mockito.*;
  * @author Caroline Jeandat {@literal <caroline.jeandat at rte-france.com>}
  */
 @ExtendWith(MockitoExtension.class)
-class ShortCircuitConfigHandlerTest extends AbstractProcessConfigHandlerTest<ShortCircuitConfig, ShortCircuitConfigEntity, ShortCircuitConfigMapper, ShortCircuitConfigHandler> {
+class ShortCircuitConfigHandlerTest extends AbstractProcessConfigHandlerTest<
+    ShortCircuitConfig,
+    ShortCircuitConfigEntity,
+    ShortCircuitConfigMapper,
+    ShortCircuitConfigRepository,
+    ShortCircuitConfigHandler> {
 
     @Override
     ProcessType getExpectedProcessType() {
@@ -36,17 +39,22 @@ class ShortCircuitConfigHandlerTest extends AbstractProcessConfigHandlerTest<Sho
     }
 
     @Override
-    ShortCircuitConfigHandler createHandler(ShortCircuitConfigMapper mapper) {
-        return new ShortCircuitConfigHandler(mapper);
+    ShortCircuitConfigRepository createRepository() {
+        return mock(ShortCircuitConfigRepository.class);
+    }
+
+    @Override
+    ShortCircuitConfigHandler createHandler(ShortCircuitConfigMapper mapper, ShortCircuitConfigRepository repository) {
+        return new ShortCircuitConfigHandler(mapper, repository);
     }
 
     @Override
     ShortCircuitConfig createProcessConfig() {
-        return new ShortCircuitConfig(UUID.randomUUID(), List.of(new ModificationInfo(UUID.randomUUID(), "descr", true)));
+        return mock(ShortCircuitConfig.class);
     }
 
     @Override
     ShortCircuitConfigEntity createProcessConfigEntity() {
-        return new ShortCircuitConfigEntity();
+        return mock(ShortCircuitConfigEntity.class);
     }
 }

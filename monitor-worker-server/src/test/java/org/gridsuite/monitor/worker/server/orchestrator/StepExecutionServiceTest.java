@@ -61,7 +61,7 @@ class StepExecutionServiceTest {
         int stepOrder = 1;
         UUID processReportId = UUID.randomUUID();
         ProcessStepExecutionContext<ProcessConfig> context = createStepExecutionContext(executionId, processReportId, stepOrder);
-        when(processStep.getType()).thenReturn(processStepType);
+        when(context.getProcessStepType()).thenReturn(processStepType);
         when(processStepType.getName()).thenReturn("TEST_STEP");
         doNothing().when(processStep).execute(context);
 
@@ -80,6 +80,8 @@ class StepExecutionServiceTest {
                 step.getStatus() == StepStatus.COMPLETED &&
                         step.getCompletedAt() != null
         ));
+
+        verifyNoMoreInteractions(notificationService);
     }
 
     @Test
@@ -88,7 +90,7 @@ class StepExecutionServiceTest {
         UUID processReportId = UUID.randomUUID();
         int stepOrder = 2;
         ProcessStepExecutionContext<ProcessConfig> context = createStepExecutionContext(executionId, processReportId, stepOrder);
-        when(processStep.getType()).thenReturn(processStepType);
+        when(context.getProcessStepType()).thenReturn(processStepType);
         when(processStepType.getName()).thenReturn("FAILING_STEP");
         RuntimeException stepException = new RuntimeException("Step execution failed");
         doThrow(stepException).when(processStep).execute(context);
@@ -109,28 +111,11 @@ class StepExecutionServiceTest {
                 step.getStatus() == StepStatus.FAILED &&
                         step.getCompletedAt() != null
         ));
+
+        verifyNoMoreInteractions(notificationService);
+
         // Verify report was sent on failure
         verify(reportRestClient).sendReport(any(UUID.class), any(ReportNode.class));
-    }
-
-    @Test
-    void skipStepShouldSendSkippedStatusWithoutExecutingStep() {
-        UUID executionId = UUID.randomUUID();
-        int stepOrder = 3;
-        ProcessStepExecutionContext<ProcessConfig> context = createSkippedStepExecutionContext(executionId, stepOrder);
-        when(processStep.getType()).thenReturn(processStepType);
-        when(processStepType.getName()).thenReturn("SKIPPED_STEP");
-
-        stepExecutionService.skipStep(context, processStep);
-
-        verify(processStep, never()).execute(any());
-        // Verify report was NOT sent on skip
-        verify(reportRestClient, never()).sendReport(any(UUID.class), any(ReportNode.class));
-        verify(notificationService).updateStepStatus(eq(executionId), argThat(step ->
-                step.getStatus() == StepStatus.SKIPPED &&
-                        "SKIPPED_STEP".equals(step.getStepType()) &&
-                        step.getStepOrder() == 3
-        ));
     }
 
     private ProcessStepExecutionContext<ProcessConfig> createStepExecutionContext(UUID executionId, UUID processReportId, int stepOrder) {
@@ -141,16 +126,6 @@ class StepExecutionServiceTest {
         when(context.getReportNode()).thenReturn(reportNode);
         when(context.getStepOrder()).thenReturn(stepOrder);
         when(context.getProcessReportId()).thenReturn(processReportId);
-
-        return context;
-    }
-
-    private ProcessStepExecutionContext<ProcessConfig> createSkippedStepExecutionContext(UUID executionId, int stepOrder) {
-        ProcessStepExecutionContext<ProcessConfig> context = mock(ProcessStepExecutionContext.class);
-        when(context.getProcessExecutionId()).thenReturn(executionId);
-        when(context.getStepExecutionId()).thenReturn(UUID.randomUUID());
-        when(context.getStartedAt()).thenReturn(java.time.Instant.now());
-        when(context.getStepOrder()).thenReturn(stepOrder);
 
         return context;
     }
