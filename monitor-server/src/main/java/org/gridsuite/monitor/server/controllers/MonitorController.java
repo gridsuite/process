@@ -75,7 +75,7 @@ public class MonitorController {
     @GetMapping("/executions")
     @Operation(summary = "Get launched processes")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The launched processes")})
-    public ResponseEntity<List<ProcessExecution>> getLaunchedProcesses(@Parameter(description = "Process type") @RequestParam(name = "processType") ProcessType processType) {
+    public ResponseEntity<List<ProcessExecution>> getLaunchedProcesses(@Parameter(description = "Process type") @RequestParam(name = "processType", required = false) ProcessType processType) {
         return ResponseEntity.ok(processExecutionService.getLaunchedProcesses(processType));
     }
 

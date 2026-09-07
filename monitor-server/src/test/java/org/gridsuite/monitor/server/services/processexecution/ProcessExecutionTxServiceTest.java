@@ -407,7 +407,7 @@ class ProcessExecutionTxServiceTest {
     }
 
     @Test
-    void getLaunchedProcesses() {
+    void getLaunchedProcessesByType() {
         UUID execution1Uuid = UUID.randomUUID();
         UUID case1Uuid = UUID.randomUUID();
         UUID config1Uuid = UUID.randomUUID();
@@ -437,7 +437,7 @@ class ProcessExecutionTxServiceTest {
         Instant startedAt2 = Instant.now().minusSeconds(80);
         ProcessExecutionEntity execution2 = ProcessExecutionEntity.builder()
             .id(execution2Uuid)
-            .type(ProcessType.SECURITY_ANALYSIS.name())
+            .type(ProcessType.LOADFLOW.name())
             .caseUuid(case2Uuid)
             .processConfigId(config2Uuid)
             .status(ProcessStatus.RUNNING)
@@ -448,17 +448,70 @@ class ProcessExecutionTxServiceTest {
             .userId("user2")
             .build();
 
-        when(executionRepository.findByTypeAndStartedAtIsNotNullOrderByStartedAtDesc(ProcessType.SECURITY_ANALYSIS.name())).thenReturn(List.of(execution2, execution1));
+        when(executionRepository.findByTypeAndStartedAtIsNotNullOrderByStartedAtDesc(ProcessType.SECURITY_ANALYSIS.name())).thenReturn(List.of(execution1));
 
         List<ProcessExecution> result = processExecutionTxService.getLaunchedProcesses(ProcessType.SECURITY_ANALYSIS);
 
         ProcessExecution processExecution1 = new ProcessExecution(execution1Uuid, ProcessType.SECURITY_ANALYSIS.name(), case1Uuid, config1Uuid, ProcessStatus.COMPLETED, "env1", scheduledAt1,
                 startedAt1, completedAt1, report1Uuid, "user1");
-        ProcessExecution processExecution2 = new ProcessExecution(execution2Uuid, ProcessType.SECURITY_ANALYSIS.name(), case2Uuid, config2Uuid, ProcessStatus.RUNNING, "env2", scheduledAt2,
-                startedAt2, null, report2Uuid, "user2");
+
+        assertThat(result).hasSize(1).containsExactly(processExecution1);
+        verify(executionRepository).findByTypeAndStartedAtIsNotNullOrderByStartedAtDesc(ProcessType.SECURITY_ANALYSIS.name());
+    }
+
+    @Test
+    void getAllLaunchedProcesses() {
+        UUID execution1Uuid = UUID.randomUUID();
+        UUID case1Uuid = UUID.randomUUID();
+        UUID config1Uuid = UUID.randomUUID();
+        UUID report1Uuid = UUID.randomUUID();
+        Instant scheduledAt1 = Instant.now().minusSeconds(60);
+        Instant startedAt1 = Instant.now().minusSeconds(30);
+        Instant completedAt1 = Instant.now();
+        ProcessExecutionEntity execution1 = ProcessExecutionEntity.builder()
+            .id(execution1Uuid)
+            .type(ProcessType.SECURITY_ANALYSIS.name())
+            .caseUuid(case1Uuid)
+            .processConfigId(config1Uuid)
+            .status(ProcessStatus.COMPLETED)
+            .executionEnvName("env1")
+            .scheduledAt(scheduledAt1)
+            .startedAt(startedAt1)
+            .completedAt(completedAt1)
+            .reportId(report1Uuid)
+            .userId("user1")
+            .build();
+
+        UUID execution2Uuid = UUID.randomUUID();
+        UUID case2Uuid = UUID.randomUUID();
+        UUID config2Uuid = UUID.randomUUID();
+        UUID report2Uuid = UUID.randomUUID();
+        Instant scheduledAt2 = Instant.now().minusSeconds(90);
+        Instant startedAt2 = Instant.now().minusSeconds(80);
+        ProcessExecutionEntity execution2 = ProcessExecutionEntity.builder()
+            .id(execution2Uuid)
+            .type(ProcessType.LOADFLOW.name())
+            .caseUuid(case2Uuid)
+            .processConfigId(config2Uuid)
+            .status(ProcessStatus.RUNNING)
+            .executionEnvName("env2")
+            .scheduledAt(scheduledAt2)
+            .startedAt(startedAt2)
+            .reportId(report2Uuid)
+            .userId("user2")
+            .build();
+
+        when(executionRepository.findAllByScheduledAtIsNotNullOrderByScheduledAtDesc()).thenReturn(List.of(execution2, execution1));
+
+        List<ProcessExecution> result = processExecutionTxService.getLaunchedProcesses(null);
+
+        ProcessExecution processExecution1 = new ProcessExecution(execution1Uuid, ProcessType.SECURITY_ANALYSIS.name(), case1Uuid, config1Uuid, ProcessStatus.COMPLETED, "env1", scheduledAt1,
+            startedAt1, completedAt1, report1Uuid, "user1");
+        ProcessExecution processExecution2 = new ProcessExecution(execution2Uuid, ProcessType.LOADFLOW.name(), case2Uuid, config2Uuid, ProcessStatus.RUNNING, "env2", scheduledAt2,
+            startedAt2, null, report2Uuid, "user2");
 
         assertThat(result).hasSize(2).containsExactly(processExecution2, processExecution1);
-        verify(executionRepository).findByTypeAndStartedAtIsNotNullOrderByStartedAtDesc(ProcessType.SECURITY_ANALYSIS.name());
+        verify(executionRepository).findAllByScheduledAtIsNotNullOrderByScheduledAtDesc();
     }
 
     @Test

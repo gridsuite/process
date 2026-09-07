@@ -141,9 +141,15 @@ public class ProcessExecutionTxService {
     }
 
     public List<ProcessExecution> getLaunchedProcesses(ProcessType processType) {
-        return processExecutionRepository.findByTypeAndStartedAtIsNotNullOrderByStartedAtDesc(processType.name()).stream()
-            .map(processExecutionMapper::toDto)
-            .toList();
+        if (processType != null) {
+            return processExecutionRepository.findByTypeAndStartedAtIsNotNullOrderByStartedAtDesc(processType.name()).stream()
+                .map(processExecutionMapper::toDto)
+                .toList();
+        } else {
+            return processExecutionRepository.findAllByScheduledAtIsNotNullOrderByScheduledAtDesc().stream()
+                .map(processExecutionMapper::toDto)
+                .toList();
+        }
     }
 
     public Optional<ProcessExecution> getExecution(UUID executionId) {
