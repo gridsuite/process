@@ -274,28 +274,6 @@ class ProcessExecutionServiceTest {
     }
 
     @Test
-    void getLaunchedProcessesShouldDelegateToTxService() {
-        List<ProcessExecution> executions = List.of(
-            ProcessExecution.builder()
-                .id(UUID.randomUUID())
-                .type(ProcessType.SECURITY_ANALYSIS.name())
-                .caseUuid(caseUuid)
-                .processConfigId(UUID.randomUUID())
-                .status(ProcessStatus.RUNNING)
-                .scheduledAt(Instant.now())
-                .userId(userId)
-                .build()
-        );
-
-        when(processExecutionTxService.getLaunchedProcesses(ProcessType.SECURITY_ANALYSIS)).thenReturn(executions);
-
-        List<ProcessExecution> result = processExecutionService.getLaunchedProcesses(ProcessType.SECURITY_ANALYSIS);
-
-        assertThat(result).isEqualTo(executions);
-        verify(processExecutionTxService).getLaunchedProcesses(ProcessType.SECURITY_ANALYSIS);
-    }
-
-    @Test
     void getAllLaunchedProcessesShouldDelegateToTxService() {
         List<ProcessExecution> executions = List.of(
             ProcessExecution.builder()
@@ -318,12 +296,12 @@ class ProcessExecutionServiceTest {
                 .build()
         );
 
-        when(processExecutionTxService.getLaunchedProcesses(null)).thenReturn(executions);
+        when(processExecutionTxService.getLaunchedProcesses()).thenReturn(executions);
 
-        List<ProcessExecution> result = processExecutionService.getLaunchedProcesses(null);
+        List<ProcessExecution> result = processExecutionService.getLaunchedProcesses();
 
         assertThat(result).isEqualTo(executions);
-        verify(processExecutionTxService).getLaunchedProcesses(null);
+        verify(processExecutionTxService).getLaunchedProcesses();
     }
 
     @Test

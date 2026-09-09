@@ -9,7 +9,6 @@ package org.gridsuite.monitor.server.services.processexecution;
 import org.gridsuite.monitor.commons.types.messaging.ProcessExecutionStatusUpdate;
 import org.gridsuite.monitor.commons.types.messaging.ProcessExecutionStep;
 import org.gridsuite.monitor.commons.types.processexecution.ProcessStatus;
-import org.gridsuite.monitor.commons.types.processexecution.ProcessType;
 import org.gridsuite.monitor.commons.types.result.ResultInfos;
 import org.gridsuite.monitor.server.dto.processconfig.PersistedProcessConfig;
 import org.gridsuite.monitor.server.dto.processexecution.ProcessExecution;
@@ -140,16 +139,10 @@ public class ProcessExecutionTxService {
             .map(ProcessExecutionEntity::getDebugFileLocation);
     }
 
-    public List<ProcessExecution> getLaunchedProcesses(ProcessType processType) {
-        if (processType != null) {
-            return processExecutionRepository.findByTypeAndStartedAtIsNotNullOrderByStartedAtDesc(processType.name()).stream()
-                .map(processExecutionMapper::toDto)
-                .toList();
-        } else {
-            return processExecutionRepository.findAllByScheduledAtIsNotNullOrderByScheduledAtDesc().stream()
-                .map(processExecutionMapper::toDto)
-                .toList();
-        }
+    public List<ProcessExecution> getLaunchedProcesses() {
+        return processExecutionRepository.findAllByScheduledAtIsNotNullOrderByScheduledAtDesc().stream()
+            .map(processExecutionMapper::toDto)
+            .toList();
     }
 
     public Optional<ProcessExecution> getExecution(UUID executionId) {

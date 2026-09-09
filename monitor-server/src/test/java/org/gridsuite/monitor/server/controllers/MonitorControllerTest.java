@@ -203,15 +203,15 @@ class MonitorControllerTest {
 
         List<ProcessExecution> processExecutionList = List.of(processExecution1, processExecution2, processExecution3);
 
-        when(processExecutionService.getLaunchedProcesses(ProcessType.SECURITY_ANALYSIS)).thenReturn(processExecutionList);
+        when(processExecutionService.getLaunchedProcesses()).thenReturn(processExecutionList);
 
-        mockMvc.perform(get("/v1/executions?processType=SECURITY_ANALYSIS").accept(MediaType.APPLICATION_JSON_VALUE).header("userId", "user1,user2,user3"))
+        mockMvc.perform(get("/v1/executions").accept(MediaType.APPLICATION_JSON_VALUE).header("userId", "user1,user2,user3"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(3)))
             .andExpect(content().json(objectMapper.writeValueAsString(processExecutionList)));
 
-        verify(processExecutionService).getLaunchedProcesses(ProcessType.SECURITY_ANALYSIS);
+        verify(processExecutionService).getLaunchedProcesses();
     }
 
     @Test
