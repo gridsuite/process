@@ -63,7 +63,7 @@ public class ProcessExecutionEntity {
     @Column
     private String debugFileLocation;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "execution_id", foreignKey = @ForeignKey(name = "processExecutionStep_processExecution_fk"))
     @OrderBy("stepOrder ASC")
     private List<ProcessExecutionStepEntity> steps;
