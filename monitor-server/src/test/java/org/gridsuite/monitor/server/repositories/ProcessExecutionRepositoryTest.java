@@ -81,9 +81,9 @@ class ProcessExecutionRepositoryTest {
     }
 
     @Test
-    void securityAnalysisLaunchedProcesses() {
+    void allProcessExecutions() {
         UUID case1Uuid = UUID.randomUUID();
-        Instant scheduledAt1 = Instant.now().minusSeconds(60);
+        Instant scheduledAt1 = Instant.now().minusSeconds(20);
         Instant startedAt1 = Instant.now().minusSeconds(30);
         Instant completedAt1 = Instant.now();
         UUID report1Uuid = UUID.randomUUID();
@@ -101,12 +101,12 @@ class ProcessExecutionRepositoryTest {
             .build();
 
         UUID case2Uuid = UUID.randomUUID();
-        Instant scheduledAt2 = Instant.now().minusSeconds(90);
+        Instant scheduledAt2 = Instant.now().minusSeconds(40);
         Instant startedAt2 = Instant.now().minusSeconds(20);
         UUID report2Uuid = UUID.randomUUID();
         ProcessExecutionEntity execution2 = ProcessExecutionEntity.builder()
             .id(UUID.randomUUID())
-            .type(ProcessType.SECURITY_ANALYSIS.name())
+            .type(ProcessType.LOADFLOW.name())
             .caseUuid(case2Uuid)
             .status(ProcessStatus.RUNNING)
             .executionEnvName("env2")
@@ -117,11 +117,11 @@ class ProcessExecutionRepositoryTest {
             .build();
 
         UUID case3Uuid = UUID.randomUUID();
-        Instant scheduledAt3 = Instant.now().minusSeconds(90);
+        Instant scheduledAt3 = Instant.now().minusSeconds(50);
         UUID report3Uuid = UUID.randomUUID();
         ProcessExecutionEntity execution3 = ProcessExecutionEntity.builder()
             .id(UUID.randomUUID())
-            .type(ProcessType.SECURITY_ANALYSIS.name())
+            .type(ProcessType.SHORT_CIRCUIT.name())
             .caseUuid(case3Uuid)
             .status(ProcessStatus.SCHEDULED)
             .executionEnvName("env3")
@@ -136,27 +136,37 @@ class ProcessExecutionRepositoryTest {
         entityManager.flush();
         entityManager.clear();
 
-        List<ProcessExecutionEntity> retrieved = executionRepository.findByTypeAndStartedAtIsNotNullOrderByStartedAtDesc(ProcessType.SECURITY_ANALYSIS.name());
-        assertThat(retrieved).hasSize(2);
+        List<ProcessExecutionEntity> retrieved = executionRepository.findAllByScheduledAtIsNotNullOrderByScheduledAtDesc();
+        assertThat(retrieved).hasSize(3);
 
         assertThat(retrieved.get(0).getType()).isEqualTo(ProcessType.SECURITY_ANALYSIS.name());
-        assertThat(retrieved.get(0).getCaseUuid()).isEqualTo(case2Uuid);
-        assertThat(retrieved.get(0).getStatus()).isEqualTo(ProcessStatus.RUNNING);
-        assertThat(retrieved.get(0).getExecutionEnvName()).isEqualTo("env2");
-        assertThat(retrieved.get(0).getScheduledAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(scheduledAt2.truncatedTo(ChronoUnit.MILLIS));
-        assertThat(retrieved.get(0).getStartedAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(startedAt2.truncatedTo(ChronoUnit.MILLIS));
-        assertThat(retrieved.get(0).getCompletedAt()).isNull();
-        assertThat(retrieved.get(0).getReportId()).isEqualTo(report2Uuid);
-        assertThat(retrieved.get(0).getUserId()).isEqualTo("user2");
+        assertThat(retrieved.get(0).getCaseUuid()).isEqualTo(case1Uuid);
+        assertThat(retrieved.get(0).getStatus()).isEqualTo(ProcessStatus.COMPLETED);
+        assertThat(retrieved.get(0).getExecutionEnvName()).isEqualTo("env1");
+        assertThat(retrieved.get(0).getScheduledAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(scheduledAt1.truncatedTo(ChronoUnit.MILLIS));
+        assertThat(retrieved.get(0).getStartedAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(startedAt1.truncatedTo(ChronoUnit.MILLIS));
+        assertThat(retrieved.get(0).getCompletedAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(completedAt1.truncatedTo(ChronoUnit.MILLIS));
+        assertThat(retrieved.get(0).getReportId()).isEqualTo(report1Uuid);
+        assertThat(retrieved.get(0).getUserId()).isEqualTo("user1");
 
-        assertThat(retrieved.get(1).getType()).isEqualTo(ProcessType.SECURITY_ANALYSIS.name());
-        assertThat(retrieved.get(1).getCaseUuid()).isEqualTo(case1Uuid);
-        assertThat(retrieved.get(1).getStatus()).isEqualTo(ProcessStatus.COMPLETED);
-        assertThat(retrieved.get(1).getExecutionEnvName()).isEqualTo("env1");
-        assertThat(retrieved.get(1).getScheduledAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(scheduledAt1.truncatedTo(ChronoUnit.MILLIS));
-        assertThat(retrieved.get(1).getStartedAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(startedAt1.truncatedTo(ChronoUnit.MILLIS));
-        assertThat(retrieved.get(1).getCompletedAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(completedAt1.truncatedTo(ChronoUnit.MILLIS));
-        assertThat(retrieved.get(1).getReportId()).isEqualTo(report1Uuid);
-        assertThat(retrieved.get(1).getUserId()).isEqualTo("user1");
+        assertThat(retrieved.get(1).getType()).isEqualTo(ProcessType.LOADFLOW.name());
+        assertThat(retrieved.get(1).getCaseUuid()).isEqualTo(case2Uuid);
+        assertThat(retrieved.get(1).getStatus()).isEqualTo(ProcessStatus.RUNNING);
+        assertThat(retrieved.get(1).getExecutionEnvName()).isEqualTo("env2");
+        assertThat(retrieved.get(1).getScheduledAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(scheduledAt2.truncatedTo(ChronoUnit.MILLIS));
+        assertThat(retrieved.get(1).getStartedAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(startedAt2.truncatedTo(ChronoUnit.MILLIS));
+        assertThat(retrieved.get(1).getCompletedAt()).isNull();
+        assertThat(retrieved.get(1).getReportId()).isEqualTo(report2Uuid);
+        assertThat(retrieved.get(1).getUserId()).isEqualTo("user2");
+
+        assertThat(retrieved.get(2).getType()).isEqualTo(ProcessType.SHORT_CIRCUIT.name());
+        assertThat(retrieved.get(2).getCaseUuid()).isEqualTo(case3Uuid);
+        assertThat(retrieved.get(2).getStatus()).isEqualTo(ProcessStatus.SCHEDULED);
+        assertThat(retrieved.get(2).getExecutionEnvName()).isEqualTo("env3");
+        assertThat(retrieved.get(2).getScheduledAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(scheduledAt3.truncatedTo(ChronoUnit.MILLIS));
+        assertThat(retrieved.get(2).getStartedAt()).isNull();
+        assertThat(retrieved.get(2).getCompletedAt()).isNull();
+        assertThat(retrieved.get(2).getReportId()).isEqualTo(report3Uuid);
+        assertThat(retrieved.get(2).getUserId()).isEqualTo("user3");
     }
 }

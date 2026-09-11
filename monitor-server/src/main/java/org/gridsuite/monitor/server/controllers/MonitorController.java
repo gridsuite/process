@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.monitor.commons.types.messaging.ProcessExecutionStep;
-import org.gridsuite.monitor.commons.types.processexecution.ProcessType;
 import org.gridsuite.monitor.server.dto.processexecution.ProcessExecution;
 import org.gridsuite.monitor.server.dto.report.ReportPage;
 import org.gridsuite.monitor.server.services.processexecution.ProcessExecutionService;
@@ -73,10 +72,10 @@ public class MonitorController {
     }
 
     @GetMapping("/executions")
-    @Operation(summary = "Get launched processes")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The launched processes")})
-    public ResponseEntity<List<ProcessExecution>> getLaunchedProcesses(@Parameter(description = "Process type") @RequestParam(name = "processType") ProcessType processType) {
-        return ResponseEntity.ok(processExecutionService.getLaunchedProcesses(processType));
+    @Operation(summary = "Get process executions")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The process executions")})
+    public ResponseEntity<List<ProcessExecution>> getProcessExecutions() {
+        return ResponseEntity.ok(processExecutionService.getProcessExecutions());
     }
 
     @GetMapping("/executions/{executionId}")

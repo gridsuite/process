@@ -9,7 +9,6 @@ package org.gridsuite.monitor.server.services.processexecution;
 import com.powsybl.commons.PowsyblException;
 import org.gridsuite.monitor.commons.types.messaging.ProcessExecutionStatusUpdate;
 import org.gridsuite.monitor.commons.types.messaging.ProcessExecutionStep;
-import org.gridsuite.monitor.commons.types.processexecution.ProcessType;
 import org.gridsuite.monitor.commons.types.result.ResultInfos;
 import org.gridsuite.monitor.server.clients.ReportRestClient;
 import org.gridsuite.monitor.server.clients.S3RestClient;
@@ -111,8 +110,8 @@ public class ProcessExecutionService {
             });
     }
 
-    public List<ProcessExecution> getLaunchedProcesses(ProcessType processType) {
-        return processExecutionTxService.getLaunchedProcesses(processType);
+    public List<ProcessExecution> getProcessExecutions() {
+        return processExecutionTxService.getProcessExecutions();
     }
 
     public Optional<ProcessExecution> getExecution(UUID executionId) {

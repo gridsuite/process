@@ -18,5 +18,5 @@ import java.util.UUID;
  */
 @Repository
 public interface ProcessExecutionRepository extends JpaRepository<ProcessExecutionEntity, UUID> {
-    List<ProcessExecutionEntity> findByTypeAndStartedAtIsNotNullOrderByStartedAtDesc(String type);
+    List<ProcessExecutionEntity> findAllByScheduledAtIsNotNullOrderByScheduledAtDesc();
 }
