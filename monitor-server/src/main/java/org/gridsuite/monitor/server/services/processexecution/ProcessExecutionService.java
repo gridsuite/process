@@ -110,8 +110,8 @@ public class ProcessExecutionService {
             });
     }
 
-    public List<ProcessExecution> getLaunchedProcesses() {
-        return processExecutionTxService.getLaunchedProcesses();
+    public List<ProcessExecution> getProcessExecutions() {
+        return processExecutionTxService.getProcessExecutions();
     }
 
     public Optional<ProcessExecution> getExecution(UUID executionId) {

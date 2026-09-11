@@ -193,7 +193,7 @@ class MonitorControllerTest {
     }
 
     @Test
-    void getLaunchedProcesses() throws Exception {
+    void getProcessExecutions() throws Exception {
         ProcessExecution processExecution1 = new ProcessExecution(UUID.randomUUID(), ProcessType.SECURITY_ANALYSIS.name(), UUID.randomUUID(), UUID.randomUUID(), ProcessStatus.COMPLETED, "env1",
                 Instant.now().minusSeconds(80), Instant.now().minusSeconds(60), Instant.now().minusSeconds(30), UUID.randomUUID(), "user1");
         ProcessExecution processExecution2 = new ProcessExecution(UUID.randomUUID(), ProcessType.SECURITY_ANALYSIS.name(), UUID.randomUUID(), UUID.randomUUID(), ProcessStatus.FAILED, "env2",
@@ -203,7 +203,7 @@ class MonitorControllerTest {
 
         List<ProcessExecution> processExecutionList = List.of(processExecution1, processExecution2, processExecution3);
 
-        when(processExecutionService.getLaunchedProcesses()).thenReturn(processExecutionList);
+        when(processExecutionService.getProcessExecutions()).thenReturn(processExecutionList);
 
         mockMvc.perform(get("/v1/executions").accept(MediaType.APPLICATION_JSON_VALUE).header("userId", "user1,user2,user3"))
             .andExpect(status().isOk())
@@ -211,7 +211,7 @@ class MonitorControllerTest {
             .andExpect(jsonPath("$", hasSize(3)))
             .andExpect(content().json(objectMapper.writeValueAsString(processExecutionList)));
 
-        verify(processExecutionService).getLaunchedProcesses();
+        verify(processExecutionService).getProcessExecutions();
     }
 
     @Test

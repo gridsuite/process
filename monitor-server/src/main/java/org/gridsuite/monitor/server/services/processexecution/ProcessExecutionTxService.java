@@ -139,7 +139,7 @@ public class ProcessExecutionTxService {
             .map(ProcessExecutionEntity::getDebugFileLocation);
     }
 
-    public List<ProcessExecution> getLaunchedProcesses() {
+    public List<ProcessExecution> getProcessExecutions() {
         return processExecutionRepository.findAllByScheduledAtIsNotNullOrderByScheduledAtDesc().stream()
             .map(processExecutionMapper::toDto)
             .toList();

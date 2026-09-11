@@ -72,10 +72,10 @@ public class MonitorController {
     }
 
     @GetMapping("/executions")
-    @Operation(summary = "Get launched processes")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The launched processes")})
-    public ResponseEntity<List<ProcessExecution>> getLaunchedProcesses() {
-        return ResponseEntity.ok(processExecutionService.getLaunchedProcesses());
+    @Operation(summary = "Get process executions")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The process executions")})
+    public ResponseEntity<List<ProcessExecution>> getProcessExecutions() {
+        return ResponseEntity.ok(processExecutionService.getProcessExecutions());
     }
 
     @GetMapping("/executions/{executionId}")

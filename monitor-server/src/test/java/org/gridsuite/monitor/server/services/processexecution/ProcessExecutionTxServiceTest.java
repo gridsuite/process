@@ -407,7 +407,7 @@ class ProcessExecutionTxServiceTest {
     }
 
     @Test
-    void getAllLaunchedProcesses() {
+    void getProcessExecutions() {
         UUID execution1Uuid = UUID.randomUUID();
         UUID case1Uuid = UUID.randomUUID();
         UUID config1Uuid = UUID.randomUUID();
@@ -450,7 +450,7 @@ class ProcessExecutionTxServiceTest {
 
         when(executionRepository.findAllByScheduledAtIsNotNullOrderByScheduledAtDesc()).thenReturn(List.of(execution2, execution1));
 
-        List<ProcessExecution> result = processExecutionTxService.getLaunchedProcesses();
+        List<ProcessExecution> result = processExecutionTxService.getProcessExecutions();
 
         ProcessExecution processExecution1 = new ProcessExecution(execution1Uuid, ProcessType.SECURITY_ANALYSIS.name(), case1Uuid, config1Uuid, ProcessStatus.COMPLETED, "env1", scheduledAt1,
             startedAt1, completedAt1, report1Uuid, "user1");

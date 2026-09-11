@@ -81,7 +81,7 @@ class ProcessExecutionRepositoryTest {
     }
 
     @Test
-    void allLaunchedProcesses() {
+    void allProcessExecutions() {
         UUID case1Uuid = UUID.randomUUID();
         Instant scheduledAt1 = Instant.now().minusSeconds(20);
         Instant startedAt1 = Instant.now().minusSeconds(30);
